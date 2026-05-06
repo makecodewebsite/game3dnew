@@ -129,7 +129,7 @@
     </div>
 
     <div id="mode-selector">
-        <h2 style="color: white; text-shadow: 2px 2px 5px black;">YASUO: INFINITY WARS</h2>
+        <h2 style="color: white; text-shadow: 2px 2px 5px black;">YASUO VS MASTER YI</h2>
         <button class="btn-mode" onclick="toggleFullScreen()" style="background: rgba(230, 126, 34, 0.5); border-color: #e67e22;">🔲 BẬT TOÀN MÀN HÌNH</button>
         <button class="btn-mode" onclick="startGame('MOBILE')">📱 CHƠI TRÊN ĐIỆN THOẠI</button>
         <button class="btn-mode" onclick="startGame('PC')">💻 CHƠI TRÊN PC</button>
@@ -140,14 +140,14 @@
     <div id="game-ui">
         <div class="top-bars">
             <div class="player-stats">
-                <div class="stat-name">SẾP YASUO</div>
+                <div class="stat-name">YASUO</div>
                 <div class="stat-details">HP: <span id="hp-text">100</span> | ST: <span id="atk-text">25</span> | GIÁP: <span id="arm-text">30</span></div>
                 <div class="bar-bg"><div class="hp-fill" id="hp-bar"></div></div>
                 <div class="mana-bg"><div class="mana-fill" id="mana-bar"></div></div>
             </div>
             
             <div class="enemy-stats">
-                <div class="stat-name">QUÁI NHÂN (ẢI <span id="stage-text">1</span>)</div>
+                <div class="stat-name">MASTER YI (ẢI <span id="stage-text">1</span>)</div>
                 <div class="stat-details">HP: <span id="e-hp-text">100</span> | ST: <span id="e-atk-text">15</span> | GIÁP: <span id="e-arm-text">10</span></div>
                 <div class="bar-bg"><div class="hp-fill" id="enemy-hp-bar" style="background: linear-gradient(90deg, #8b0000, #ff0000);"></div></div>
                 <div class="mana-bg"><div class="mana-fill" id="enemy-mana-bar" style="float: right; background: linear-gradient(-90deg, #0066cc, #00aaff);"></div></div>
@@ -185,6 +185,13 @@
     </div>
 
     <script>
+        // ==========================================
+        // KHU VỰC CHỈNH TỶ LỆ KÍCH THƯỚC (CỨU TINH CHỐNG TÀNG HÌNH)
+        // Nếu sếp thấy nhân vật to quá hoặc nhỏ quá, chỉ cần chỉnh số ở 2 dòng này!
+        const YASUO_SCALE = 0.015; 
+        const MASTER_YI_SCALE = 0.015; 
+        // ==========================================
+
         let alertCallback = null;
         function showAlert(msg, callback) {
             document.getElementById('alert-msg').innerText = msg;
@@ -281,7 +288,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            // Tăng cường ánh sáng để thấy rõ chi tiết nhân vật
             scene.add(new THREE.AmbientLight(0xffffff, 1.2));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(5, 10, 5); 
@@ -289,22 +295,15 @@
 
             const loader = new THREE.GLTFLoader();
             
-            // ================= TẢI PLAYER =================
+            // ================= TẢI YASUO =================
             document.getElementById('loading-status').innerText = "Đang tải Yasuo...";
             loader.load('./player/nhanvat.glb', (gltf) => {
                 player = gltf.scene; 
-                scene.add(player);
-
-                // THUẬT TOÁN AUTO SCALE: Ép cân cho bằng 4.5 mét bất chấp file to hay nhỏ
-                const pBox = new THREE.Box3().setFromObject(player);
-                const pSize = pBox.getSize(new THREE.Vector3());
-                const pScale = 4.5 / pSize.y; 
-                player.scale.set(pScale, pScale, pScale);
-                
-                // Thuật toán dời nhân vật sao cho bàn chân chạm chính xác mặt đất
-                const pBoxAfter = new THREE.Box3().setFromObject(player);
-                player.position.y = -pBoxAfter.min.y; 
+                // Gán tỷ lệ thủ công
+                player.scale.set(YASUO_SCALE, YASUO_SCALE, YASUO_SCALE); 
+                player.position.set(0, 0, 0); // Đặt cố định ở tọa độ 0
                 player.rotation.y = Math.PI / 2; 
+                scene.add(player);
 
                 pMixer = new THREE.AnimationMixer(player);
                 try {
@@ -322,24 +321,17 @@
                     showAlert("Lỗi thiết lập Animation Yasuo: Thiếu hoạt ảnh!", null);
                 }
 
-                // ================= TẢI BOSS MỚI =================
-                document.getElementById('loading-status').innerText = "Đang tải Quái Nhân...";
+                // ================= TẢI MASTER YI =================
+                document.getElementById('loading-status').innerText = "Đang tải Master Yi...";
+                
+                // === ĐÃ SỬA TÊN THÀNH masteryi.glb CHUẨN XÁC ===
                 loader.load('./boss/masteryi.glb', (gltf2) => {
                     enemy = gltf2.scene; 
-                    scene.add(enemy);
-
-                    // THUẬT TOÁN AUTO SCALE CHO BOSS
-                    const eBox = new THREE.Box3().setFromObject(enemy);
-                    const eSize = eBox.getSize(new THREE.Vector3());
-                    const eScale = 4.8 / eSize.y; // Boss cao 4.8 mét
-                    enemy.scale.set(eScale, eScale, eScale);
-                    
-                    // Ép chân chạm đất
-                    const eBoxAfter = new THREE.Box3().setFromObject(enemy);
-                    enemy.position.y = -eBoxAfter.min.y;
-                    
-                    enemy.position.set(7, enemy.position.y, 0); 
+                    // Gán tỷ lệ thủ công
+                    enemy.scale.set(MASTER_YI_SCALE, MASTER_YI_SCALE, MASTER_YI_SCALE);
+                    enemy.position.set(7, 0, 0); 
                     enemy.rotation.y = -Math.PI / 2; 
+                    scene.add(enemy);
 
                     eMixer = new THREE.AnimationMixer(enemy);
                     try {
@@ -354,10 +346,10 @@
                         eDeath.setLoop(THREE.LoopOnce); eDeath.clampWhenFinished = true;
                         playAnim(eMixer, eIdle, 'enemy');
                     } catch(err) {
-                        showAlert("Con Boss mới không có đủ Animation theo số cũ!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
+                        showAlert("Con Yi không có đủ Animation theo số cũ!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
                     }
 
-                    // HIỆN LOG
+                    // HIỆN BẢNG LOG ĐỂ SẾP TÌM SỐ ANIMATION CHO YI
                     let logHTML = "";
                     gltf2.animations.forEach((a,i) => { logHTML += `[${i}] ---> ${a.name}<br>`; });
                     document.getElementById('log-content').innerHTML = logHTML;
@@ -370,11 +362,11 @@
                     loop();
 
                 }, undefined, (err) => {
-                    showAlert("Lỗi tải Boss (masteryi.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
+                    showAlert("Lỗi tải Master Yi (masteryi.glb): Đường dẫn sai hoặc file hỏng!\n" + err, null);
                 });
 
             }, undefined, (err) => {
-                showAlert("Lỗi tải Player (nhanvat.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
+                showAlert("Lỗi tải Player (nhanvat.glb): Đường dẫn sai hoặc file hỏng!\n" + err, null);
             });
             
             window.addEventListener('resize', () => {
@@ -519,9 +511,7 @@
             buildBotStats(pStats.stage); isEnemyDead = false;
             
             if(!scene.children.includes(enemy)) { scene.add(enemy); }
-            // Lấy lại tọa độ Y chuẩn đã căn chỉnh từ lúc đầu
-            const eBoxAfter = new THREE.Box3().setFromObject(enemy);
-            enemy.position.set(player.position.x + 8, -eBoxAfter.min.y, 0); 
+            enemy.position.set(player.position.x + 8, 0, 0); 
             isEnemyAttacking = false;
             playAnim(eMixer, eIdle, 'enemy'); 
             updateUI();
@@ -543,13 +533,9 @@
                     if(keys.right) { player.position.x += 0.12; player.rotation.y = Math.PI/2; isMoving = true; }
                 }
 
-                // Bảo toàn gốc tọa độ Y khi nhảy
-                const pBoxY = new THREE.Box3().setFromObject(player);
-                const groundY = -pBoxY.min.y + player.position.y; // Y mặt đất
-
                 if(isJumping) { 
                     player.position.y += velocityY; velocityY -= 0.02; 
-                    if(player.position.y <= groundY) { player.position.y = groundY; isJumping = false; velocityY = 0; } 
+                    if(player.position.y <= 0) { player.position.y = 0; isJumping = false; velocityY = 0; } 
                 }
 
                 if(!isAttacking && !isJumping && !isDashing) {
@@ -563,12 +549,9 @@
                     let dir = player.position.x > enemy.position.x ? 1 : -1;
                     let isEMoving = false;
 
-                    const eBoxY = new THREE.Box3().setFromObject(enemy);
-                    const eGroundY = -eBoxY.min.y + enemy.position.y;
-
                     if(isEnemyJumping) { 
                         enemy.position.y += enemyVelocityY; enemyVelocityY -= 0.02; 
-                        if(enemy.position.y <= eGroundY) { enemy.position.y = eGroundY; isEnemyJumping = false; enemyVelocityY = 0; } 
+                        if(enemy.position.y <= 0) { enemy.position.y = 0; isEnemyJumping = false; enemyVelocityY = 0; } 
                     }
 
                     if(!isEnemyAttacking) {
