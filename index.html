@@ -3,144 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gacha System - RPG Project</title>
+    <title>RPG Project - Hero Management</title>
     <style>
-        :root {
-            --ur: #ff3e3e; --ssr: #ffcc00; --sr: #c63eff; --r: #3ea6ff;
-        }
-        body {
-            margin: 0; background: #0a0a0f; color: white;
-            font-family: 'Segoe UI', sans-serif; display: flex;
-            flex-direction: column; align-items: center; height: 100vh; overflow: hidden;
-        }
-        #gacha-container {
-            width: 100%; max-width: 500px; text-align: center; margin-top: 50px;
-        }
-        .stats-top { margin-bottom: 20px; font-size: 1.1rem; color: #ffcc00; }
+        :root { --ur: #ff3e3e; --ssr: #ffcc00; --sr: #c63eff; --r: #3ea6ff; }
+        body { margin: 0; background: #0a0a0f; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* HIỂN THỊ KẾT QUẢ */
-        #result-display {
-            display: flex; flex-wrap: wrap; justify-content: center;
-            gap: 10px; min-height: 200px; padding: 20px;
-            background: rgba(255,255,255,0.05); border-radius: 15px; margin: 20px;
-        }
-        .card {
-            width: 80px; height: 110px; border-radius: 8px;
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; font-weight: bold; font-size: 14px;
-            animation: fadeIn 0.5s ease-out forwards; opacity: 0;
-            border: 2px solid transparent; position: relative;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .rarity-ur { background: linear-gradient(135deg, #440000, var(--ur)); border-color: #ff9a9a; box-shadow: 0 0 15px var(--ur); }
-        .rarity-ssr { background: linear-gradient(135deg, #443300, var(--ssr)); border-color: #fff3a3; box-shadow: 0 0 10px var(--ssr); }
-        .rarity-sr { background: linear-gradient(135deg, #220044, var(--sr)); border-color: #e2a3ff; }
-        .rarity-r { background: linear-gradient(135deg, #002244, var(--r)); border-color: #a3d5ff; }
+        /* HEADER STATS */
+        .header { width: 100%; max-width: 600px; padding: 15px; background: #15151f; display: flex; justify-content: space-around; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 100; }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .stat-value { font-weight: bold; color: #ffcc00; display: block; }
+        #total-power { color: #00ffcc; font-size: 1.2rem; }
 
-        /* NÚT BẤM */
-        .controls { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
-        .btn-gacha {
-            padding: 15px 30px; border: none; border-radius: 30px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-            background: #fff; color: #000; font-size: 16px;
-        }
-        .btn-gacha:active { transform: scale(0.9); }
-        .btn-x10 { background: #ffcc00; }
-        
-        #pity-info { font-size: 12px; color: #888; margin-top: 10px; }
+        /* TABS */
+        .tabs { display: flex; width: 100%; max-width: 600px; background: #1a1a25; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; color: #888; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: white; border-bottom-color: #ffcc00; background: rgba(255,204,0,0.05); }
+
+        .screen { width: 100%; max-width: 600px; display: none; padding: 20px; box-sizing: border-box; }
+        .screen.active { display: block; }
+
+        /* GACHA DISPLAY */
+        #result-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 20px 0; }
+        .card { width: 70px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+
+        /* INVENTORY LIST */
+        .hero-list { display: flex; flex-direction: column; gap: 10px; }
+        .hero-item { background: #1a1a25; padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 15px; border-left: 5px solid #333; }
+        .hero-info { flex-grow: 1; }
+        .hero-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .hero-lvl { font-size: 12px; color: #00ffcc; }
+        .btn-up { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        .rarity-ur { background: #440000; border-color: var(--ur); color: var(--ur); }
+        .rarity-ssr { background: #443300; border-color: var(--ssr); color: var(--ssr); }
+        .rarity-sr { background: #220044; border-color: var(--sr); color: var(--sr); }
+        .rarity-r { background: #002244; border-color: var(--r); color: var(--r); }
+
+        .btn-main { padding: 15px 25px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; margin: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="gacha-container">
-        <div class="stats-top">Kim Cương: <span id="gem-count">5000</span> 💎</div>
-        
-        <div id="result-display">
-            <p id="placeholder">Sẵn sàng triệu hồi nhân vật...</p>
-        </div>
+    <div class="header">
+        <div class="stat-box"><span class="stat-label">Lực Chiến</span><span id="total-power" class="stat-value">0</span></div>
+        <div class="stat-box"><span class="stat-label">Kim Cương</span><span id="gems" class="stat-value">5000</span></div>
+        <div class="stat-box"><span class="stat-label">Vàng</span><span id="gold" class="stat-value">10000</span></div>
+    </div>
 
-        <div class="controls">
-            <button class="btn-gacha" onclick="summon(1)">QUAY X1</button>
-            <button class="btn-gacha btn-x10" onclick="summon(10)">QUAY X10</button>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('gacha')">TRIỆU HỒI</button>
+        <button class="tab-btn" onclick="openTab('inventory')">KHO TƯỚNG</button>
+    </div>
+
+    <div id="gacha" class="screen active">
+        <div id="result-display"><p style="color:#555">Kết quả triệu hồi sẽ hiện ở đây...</p></div>
+        <div style="text-align: center;">
+            <button class="btn-main" style="background:#eee" onclick="summon(1)">X1 (300💎)</button>
+            <button class="btn-main" style="background:#ffcc00" onclick="summon(10)">X10 (2700💎)</button>
         </div>
-        
-        <div id="pity-info">Bảo hiểm SR+: <span id="pity-count">10</span> lượt nữa</div>
+    </div>
+
+    <div id="inventory" class="screen">
+        <div class="hero-list" id="hero-list-ui">
+            </div>
     </div>
 
     <script>
-        let gems = 5000;
-        let pityCounter = 0; // Đếm để kích hoạt bảo hiểm
-        
-        const HEROES = {
-            UR: ["Sát Thủ Rồng", "Thần Kiếm", "Pháp Sư Cổ"],
-            SSR: ["Chiến Binh Thép", "Cung Thủ Ánh Sáng", "Hộ Vệ Hoàng Gia"],
-            SR: ["Kiếm Khách", "Sát Thủ Bóng Đêm", "Y Sư"],
-            R: ["Lính Gác", "Thợ Săn", "Dân Làng", "Tân Binh"]
+        let userData = { gems: 5000, gold: 10000, pity: 0, myHeroes: [] };
+
+        const HERO_DATA = {
+            UR: { names: ["Sát Thủ Rồng", "Thần Kiếm"], basePower: 2500 },
+            SSR: { names: ["Chiến Binh Thép", "Cung Thủ"], basePower: 1200 },
+            SR: { names: ["Kiếm Khách", "Sát Thủ"], basePower: 500 },
+            R: { names: ["Lính Gác", "Thợ Săn"], basePower: 100 }
         };
 
+        function openTab(tabId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(tabId === 'inventory') renderInventory();
+        }
+
         function updateUI() {
-            document.getElementById('gem-count').innerText = gems;
-            document.getElementById('pity-count').innerText = 10 - pityCounter;
+            document.getElementById('gems').innerText = userData.gems;
+            document.getElementById('gold').innerText = userData.gold;
+            
+            let totalPower = userData.myHeroes.reduce((sum, h) => sum + (h.power + (h.level * 50)), 0);
+            document.getElementById('total-power').innerText = totalPower.toLocaleString();
         }
 
         function summon(times) {
-            const cost = times === 10 ? 2700 : 300; // Quay x10 được giảm giá
-            if (gems < cost) {
-                alert("Không đủ Kim Cương rồi sếp ơi!");
-                return;
-            }
+            const cost = times === 10 ? 2700 : 300;
+            if (userData.gems < cost) return alert("Không đủ Kim Cương!");
 
-            gems -= cost;
+            userData.gems -= cost;
             const display = document.getElementById('result-display');
-            display.innerHTML = ""; // Xóa kết quả cũ
+            display.innerHTML = "";
 
             for (let i = 0; i < times; i++) {
-                pityCounter++;
-                let result;
-
-                // Logic Gacha
-                const rand = Math.random() * 100;
+                userData.pity++;
+                let rand = Math.random() * 100;
+                let rarity = "R";
                 
-                if (pityCounter >= 10) {
-                    // Kích hoạt bảo hiểm SR trở lên
-                    result = getRarity(rand, true);
-                    pityCounter = 0;
-                } else {
-                    result = getRarity(rand, false);
-                    if (result.rarity === "SR" || result.rarity === "SSR" || result.rarity === "UR") {
-                        pityCounter = 0;
-                    }
+                if (userData.pity >= 10 || rand < 25) {
+                    if (rand < 1) rarity = "UR";
+                    else if (rand < 5) rarity = "SSR";
+                    else rarity = "SR";
+                    userData.pity = 0;
                 }
+
+                let name = HERO_DATA[rarity].names[Math.floor(Math.random() * HERO_DATA[rarity].names.length)];
+                let newHero = { id: Date.now() + i, name, rarity, level: 1, power: HERO_DATA[rarity].basePower };
                 
-                createCard(result);
+                userData.myHeroes.push(newHero);
+                
+                let card = document.createElement('div');
+                card.className = `card rarity-${rarity.toLowerCase()}`;
+                card.innerHTML = `<span>${rarity}</span><div style="text-align:center">${name}</div>`;
+                display.appendChild(card);
             }
             updateUI();
         }
 
-        function getRarity(rand, isPity) {
-            if (isPity) {
-                if (rand < 5) return { rarity: "UR", name: HEROES.UR[Math.floor(Math.random() * HEROES.UR.length)] };
-                if (rand < 20) return { rarity: "SSR", name: HEROES.SSR[Math.floor(Math.random() * HEROES.SSR.length)] };
-                return { rarity: "SR", name: HEROES.SR[Math.floor(Math.random() * HEROES.SR.length)] };
+        function renderInventory() {
+            const listUI = document.getElementById('hero-list-ui');
+            listUI.innerHTML = userData.myHeroes.length === 0 ? "<p>Chưa có tướng nào, đi quay đi sếp!</p>" : "";
+
+            userData.myHeroes.sort((a,b) => b.power - a.power).forEach(hero => {
+                let item = document.createElement('div');
+                item.className = "hero-item";
+                item.style.borderLeftColor = `var(--${hero.rarity.toLowerCase()})`;
+                item.innerHTML = `
+                    <div class="hero-info">
+                        <div class="hero-name">${hero.name} <span style="color:var(--${hero.rarity.toLowerCase()})">[${hero.rarity}]</span></div>
+                        <div class="hero-lvl">Cấp: ${hero.level} | Công: ${hero.power + (hero.level * 50)}</div>
+                    </div>
+                    <button class="btn-up" onclick="upgradeHero(${hero.id})">NÂNG CẤP (500💰)</button>
+                `;
+                listUI.appendChild(item);
+            });
+        }
+
+        function upgradeHero(id) {
+            if (userData.gold < 500) return alert("Hết vàng rồi sếp!");
+            let hero = userData.myHeroes.find(h => h.id === id);
+            if (hero) {
+                userData.gold -= 500;
+                hero.level++;
+                renderInventory();
+                updateUI();
             }
-
-            if (rand < 1) return { rarity: "UR", name: HEROES.UR[Math.floor(Math.random() * HEROES.UR.length)] };
-            if (rand < 5) return { rarity: "SSR", name: HEROES.SSR[Math.floor(Math.random() * HEROES.SSR.length)] };
-            if (rand < 25) return { rarity: "SR", name: HEROES.SR[Math.floor(Math.random() * HEROES.SR.length)] };
-            return { rarity: "R", name: HEROES.R[Math.floor(Math.random() * HEROES.R.length)] };
         }
 
-        function createCard(hero) {
-            const display = document.getElementById('result-display');
-            const card = document.createElement('div');
-            card.className = `card rarity-${hero.rarity.toLowerCase()}`;
-            card.innerHTML = `
-                <div style="font-size: 10px; margin-bottom: 5px;">${hero.rarity}</div>
-                <div style="text-align:center">${hero.name}</div>
-            `;
-            display.appendChild(card);
-        }
+        updateUI();
     </script>
 </body>
 </html>
