@@ -324,7 +324,7 @@
 
                 // ================= TẢI BOSS MỚI =================
                 document.getElementById('loading-status').innerText = "Đang tải Quái Nhân...";
-                loader.load('./boss/quaivat.glb', (gltf2) => {
+                loader.load('./boss/masteryi.glb', (gltf2) => {
                     enemy = gltf2.scene; 
                     scene.add(enemy);
 
@@ -370,7 +370,7 @@
                     loop();
 
                 }, undefined, (err) => {
-                    showAlert("Lỗi tải Boss (quaivat.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
+                    showAlert("Lỗi tải Boss (masteryi.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
                 });
 
             }, undefined, (err) => {
