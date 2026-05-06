@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YASUO 2.5D: INFINITY WARS</title>
+    <title>YASUO VS MASTER YI</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -33,8 +33,10 @@
 
         #loading-screen {
             position: absolute; inset: 0; background: #000; color: #fff;
-            display: none; justify-content: center; align-items: center; z-index: 90; font-size: 1.2rem;
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 90; font-size: 1.2rem; text-align: center;
         }
+        .progress-bar-container { width: 80%; max-width: 300px; height: 10px; background: #333; border: 1px solid #fff; margin-top: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.1s; }
 
         #game-ui { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 10; }
         
@@ -53,29 +55,16 @@
         #mobile-controls { display: none; pointer-events: auto; }
         
         .move-group { position: absolute; bottom: 20px; left: 30px; width: 140px; height: 130px; }
-        .btn-move { 
-            position: absolute; width: 60px; height: 60px; 
-            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); 
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-            color: white; font-size: 20px; font-weight: bold; backdrop-filter: blur(2px);
-        }
+        .btn-move { position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; backdrop-filter: blur(2px); }
         #btn-jump { top: 0; left: 35px; }
         #btn-left { bottom: 0; left: 0; } 
         #btn-right { bottom: 0; right: 0; } 
 
         .action-group { position: absolute; bottom: 20px; right: 30px; display: flex; gap: 15px; align-items: flex-end; }
-        .btn-action { 
-            width: 70px; height: 70px; background: rgba(255,255,255,0.15); 
-            border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; 
-            color: white; font-weight: bold; backdrop-filter: blur(2px);
-        }
+        .btn-action { width: 70px; height: 70px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; backdrop-filter: blur(2px); }
         #btn-dash { width: 60px; height: 60px; font-size: 13px; }
         #btn-attack { width: 85px; height: 85px; background: rgba(255,0,0,0.4); border-color: #ff3333; font-size: 16px;}
-        #btn-ult { 
-            position: absolute; top: -85px; right: 0; 
-            background: rgba(0,150,255,0.5); border-color: #00aaff; display: none; box-shadow: 0 0 15px #00aaff;
-        }
+        #btn-ult { position: absolute; top: -85px; right: 0; background: rgba(0,150,255,0.5); border-color: #00aaff; display: none; box-shadow: 0 0 15px #00aaff; }
 
         #upgrade-menu {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -95,18 +84,13 @@
         }
         .alert-box {
             background: #222; border: 2px solid #fff; padding: 30px; border-radius: 10px;
-            text-align: center; color: white; min-width: 300px;
-            word-wrap: break-word; 
+            text-align: center; color: white; min-width: 300px; word-wrap: break-word; 
         }
-        .alert-box button {
-            margin-top: 20px; padding: 10px 30px; background: #ffcc00; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;
-        }
+        .alert-box button { margin-top: 20px; padding: 10px 30px; background: #ffcc00; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
 
         #log-overlay {
-            position: absolute; top: 5%; left: 5%; right: 5%; bottom: 5%;
-            background: rgba(0,0,0,0.95); border: 3px solid #ffcc00; border-radius: 10px;
-            display: none; flex-direction: column; z-index: 2000; pointer-events: auto; padding: 20px;
-            color: #00ffcc; font-family: monospace; font-size: 14px;
+            position: absolute; top: 5%; left: 5%; right: 5%; bottom: 5%; background: rgba(0,0,0,0.95); border: 3px solid #ffcc00; border-radius: 10px;
+            display: none; flex-direction: column; z-index: 2000; pointer-events: auto; padding: 20px; color: #00ffcc; font-family: monospace; font-size: 14px;
         }
         #log-content { overflow-y: auto; flex-grow: 1; margin-bottom: 15px; border: 1px solid #444; padding: 10px; }
         .log-btn { padding: 15px; background: #ff3333; color: white; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
@@ -135,7 +119,13 @@
         <button class="btn-mode" onclick="startGame('PC')">💻 CHƠI TRÊN PC</button>
     </div>
 
-    <div id="loading-screen">ĐANG TẢI DỮ LIỆU... <br><span id="loading-status" style="font-size:14px; color:#aaa;">Khởi tạo...</span></div>
+    <div id="loading-screen">
+        ĐANG TẢI DỮ LIỆU... <br>
+        <span id="loading-status" style="font-size:14px; color:#aaa; margin-top: 10px;">Đang chuẩn bị...</span>
+        <div class="progress-bar-container">
+            <div id="loading-bar" class="progress-bar-fill"></div>
+        </div>
+    </div>
 
     <div id="game-ui">
         <div class="top-bars">
@@ -174,29 +164,24 @@
         <div class="up-item"><span>+15 ST (<span id="c-atk">50</span>G)</span><button class="btn-buy" onclick="buy('atk')">MUA</button></div>
         <div class="up-item"><span>+50 Máu (<span id="c-hp">50</span>G)</span><button class="btn-buy" onclick="buy('hp')">MUA</button></div>
         <div class="up-item"><span>+5 Giáp (<span id="c-arm">100</span>G)</span><button class="btn-buy" onclick="buy('arm')">MUA</button></div>
-        
         <div class="jump-box">
             <span>Nhảy đến Ải:</span>
             <input type="number" id="jump-val" value="5" min="2">
             <button onclick="jumpStage()">NHẢY</button>
         </div>
-
         <button onclick="resumeGame()" style="width:100%; margin-top:15px; padding:10px; background: #28a745; color:white; border:none; font-weight:bold; border-radius: 4px;">TIẾP TỤC CHIẾN ĐẤU</button>
     </div>
 
     <script>
-        // ==========================================
-        // KHU VỰC CHỈNH TỶ LỆ KÍCH THƯỚC (CỨU TINH CHỐNG TÀNG HÌNH)
-        // Nếu sếp thấy nhân vật to quá hoặc nhỏ quá, chỉ cần chỉnh số ở 2 dòng này!
         const YASUO_SCALE = 0.015; 
         const MASTER_YI_SCALE = 0.015; 
-        // ==========================================
 
         let alertCallback = null;
         function showAlert(msg, callback) {
             document.getElementById('alert-msg').innerText = msg;
             document.getElementById('custom-alert').style.display = 'flex';
             alertCallback = callback;
+            document.getElementById('loading-screen').style.display = 'none'; // Giấu loading khi bị lỗi
         }
         function closeAlert() {
             document.getElementById('custom-alert').style.display = 'none';
@@ -204,8 +189,7 @@
         }
 
         function toggleFullScreen() {
-            let doc = window.document;
-            let docEl = doc.documentElement;
+            let doc = window.document; let docEl = doc.documentElement;
             if(!doc.fullscreenElement && !doc.webkitFullscreenElement) {
                 if(docEl.requestFullscreen) docEl.requestFullscreen().catch(err => console.log(err));
                 else if(docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
@@ -228,7 +212,6 @@
         let isAttacking = false, isEnemyAttacking = false;
         
         let isDead = false, isEnemyDead = false, isMenuOpen = false; 
-        
         let isDashing = false, dashFrames = 0, dashDir = 1;
 
         let pStats = { hp: 100, maxHp: 100, armor: 30, mana: 0, atk: 25, gold: 0, stage: 1 };
@@ -295,22 +278,19 @@
 
             const loader = new THREE.GLTFLoader();
             
-            // ================= TẢI YASUO =================
-            document.getElementById('loading-status').innerText = "Đang tải Yasuo...";
+            // ================= TẢI YASUO CÓ ĐO TIẾN ĐỘ =================
+            document.getElementById('loading-status').innerText = "Đang tải Yasuo... 0%";
             loader.load('./player/nhanvat.glb', (gltf) => {
                 player = gltf.scene; 
-                // Gán tỷ lệ thủ công
                 player.scale.set(YASUO_SCALE, YASUO_SCALE, YASUO_SCALE); 
-                player.position.set(0, 0, 0); // Đặt cố định ở tọa độ 0
+                player.position.set(0, 0, 0); 
                 player.rotation.y = Math.PI / 2; 
                 scene.add(player);
 
                 pMixer = new THREE.AnimationMixer(player);
                 try {
-                    pIdle = pMixer.clipAction(gltf.animations[12]); 
-                    pRun = pMixer.clipAction(gltf.animations[26]);  
-                    pAtk = pMixer.clipAction(gltf.animations[0]);   
-                    pUlt = pMixer.clipAction(gltf.animations[42]);  
+                    pIdle = pMixer.clipAction(gltf.animations[12]); pRun = pMixer.clipAction(gltf.animations[26]);  
+                    pAtk = pMixer.clipAction(gltf.animations[0]); pUlt = pMixer.clipAction(gltf.animations[42]);  
                     pDeath = pMixer.clipAction(gltf.animations[8]); 
 
                     pAtk.setLoop(THREE.LoopOnce); pAtk.clampWhenFinished = true;
@@ -318,16 +298,16 @@
                     pDeath.setLoop(THREE.LoopOnce); pDeath.clampWhenFinished = true;
                     playAnim(pMixer, pIdle, 'player');
                 } catch(err) {
-                    showAlert("Lỗi thiết lập Animation Yasuo: Thiếu hoạt ảnh!", null);
+                    showAlert("Lỗi thiết lập Animation Yasuo!", null);
                 }
 
-                // ================= TẢI MASTER YI =================
-                document.getElementById('loading-status').innerText = "Đang tải Master Yi...";
+                // ================= TẢI MASTER YI CÓ ĐO TIẾN ĐỘ =================
+                document.getElementById('loading-status').innerText = "Đang tải Master Yi... 0%";
+                document.getElementById('loading-bar').style.width = "0%";
                 
-                // === ĐÃ SỬA TÊN THÀNH masteryi.glb CHUẨN XÁC ===
                 loader.load('./boss/masteryi.glb', (gltf2) => {
+                    document.getElementById('loading-status').innerText = "Đang giải nén dữ liệu...";
                     enemy = gltf2.scene; 
-                    // Gán tỷ lệ thủ công
                     enemy.scale.set(MASTER_YI_SCALE, MASTER_YI_SCALE, MASTER_YI_SCALE);
                     enemy.position.set(7, 0, 0); 
                     enemy.rotation.y = -Math.PI / 2; 
@@ -335,10 +315,8 @@
 
                     eMixer = new THREE.AnimationMixer(enemy);
                     try {
-                        eIdle = eMixer.clipAction(gltf2.animations[12]); 
-                        eRun = eMixer.clipAction(gltf2.animations[26]);  
-                        eAtk = eMixer.clipAction(gltf2.animations[0]);   
-                        eUlt = eMixer.clipAction(gltf2.animations[42]);  
+                        eIdle = eMixer.clipAction(gltf2.animations[12]); eRun = eMixer.clipAction(gltf2.animations[26]);  
+                        eAtk = eMixer.clipAction(gltf2.animations[0]); eUlt = eMixer.clipAction(gltf2.animations[42]);  
                         eDeath = eMixer.clipAction(gltf2.animations[8]); 
 
                         eAtk.setLoop(THREE.LoopOnce); eAtk.clampWhenFinished = true;
@@ -349,24 +327,36 @@
                         showAlert("Con Yi không có đủ Animation theo số cũ!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
                     }
 
-                    // HIỆN BẢNG LOG ĐỂ SẾP TÌM SỐ ANIMATION CHO YI
                     let logHTML = "";
                     gltf2.animations.forEach((a,i) => { logHTML += `[${i}] ---> ${a.name}<br>`; });
                     document.getElementById('log-content').innerHTML = logHTML;
                     document.getElementById('log-overlay').style.display = 'flex';
 
-                    // XÓA MÀN HÌNH CHỜ
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('game-ui').style.display = 'block';
                     updateUI();
                     loop();
 
-                }, undefined, (err) => {
-                    showAlert("Lỗi tải Master Yi (masteryi.glb): Đường dẫn sai hoặc file hỏng!\n" + err, null);
+                }, (xhr) => {
+                    // CẬP NHẬT THANH TIẾN ĐỘ TẢI YI
+                    if (xhr.lengthComputable) {
+                        let percentComplete = Math.round(xhr.loaded / xhr.total * 100);
+                        document.getElementById('loading-status').innerText = "Đang tải Master Yi... " + percentComplete + "%";
+                        document.getElementById('loading-bar').style.width = percentComplete + "%";
+                    }
+                }, (err) => {
+                    showAlert("Lỗi tải Master Yi (masteryi.glb): Không tìm thấy file hoặc file bị hỏng!\nChi tiết: " + err.message, null);
                 });
 
-            }, undefined, (err) => {
-                showAlert("Lỗi tải Player (nhanvat.glb): Đường dẫn sai hoặc file hỏng!\n" + err, null);
+            }, (xhr) => {
+                // CẬP NHẬT THANH TIẾN ĐỘ TẢI YASUO
+                if (xhr.lengthComputable) {
+                    let percentComplete = Math.round(xhr.loaded / xhr.total * 100);
+                    document.getElementById('loading-status').innerText = "Đang tải Yasuo... " + percentComplete + "%";
+                    document.getElementById('loading-bar').style.width = percentComplete + "%";
+                }
+            }, (err) => {
+                showAlert("Lỗi tải Player (nhanvat.glb): Không tìm thấy file!\nChi tiết: " + err.message, null);
             });
             
             window.addEventListener('resize', () => {
