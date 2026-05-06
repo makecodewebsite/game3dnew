@@ -36,7 +36,6 @@
             display: none; justify-content: center; align-items: center; z-index: 90; font-size: 1.2rem;
         }
 
-        /* GIAO DIỆN CHÍNH */
         #game-ui { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 10; }
         
         .top-bars { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; }
@@ -51,7 +50,6 @@
         .mana-bg { width: 100%; height: 8px; background: #222; border: 1px solid #000; position: relative;}
         .mana-fill { height: 100%; background: linear-gradient(90deg, #0066cc, #00aaff); width: 0%; transition: width 0.2s; }
 
-        /* ĐIỀU KHIỂN MOBILE */
         #mobile-controls { display: none; pointer-events: auto; }
         
         .move-group { position: absolute; bottom: 20px; left: 30px; width: 140px; height: 130px; }
@@ -79,7 +77,6 @@
             background: rgba(0,150,255,0.5); border-color: #00aaff; display: none; box-shadow: 0 0 15px #00aaff;
         }
 
-        /* MENU NÂNG CẤP & NHẢY ẢI */
         #upgrade-menu {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(10, 10, 15, 0.98); border: 2px solid #ffcc00; padding: 20px;
@@ -92,7 +89,6 @@
         .jump-box input { width: 60px; padding: 5px; background: #222; border: 1px solid #fff; color: white; text-align: center; font-weight: bold;}
         .jump-box button { background: #ff3333; border: none; padding: 6px 12px; font-weight: bold; color: white; cursor: pointer; border-radius: 3px; }
 
-        /* BẢNG THÔNG BÁO CUSTOM */
         #custom-alert {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; pointer-events: auto;
@@ -100,12 +96,12 @@
         .alert-box {
             background: #222; border: 2px solid #fff; padding: 30px; border-radius: 10px;
             text-align: center; color: white; min-width: 300px;
+            word-wrap: break-word; /* Để lỗi dài không bị tràn */
         }
         .alert-box button {
             margin-top: 20px; padding: 10px 30px; background: #ffcc00; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;
         }
 
-        /* BẢNG HIỂN THỊ LOG HOẠT ẢNH TRÊN MÀN HÌNH */
         #log-overlay {
             position: absolute; top: 5%; left: 5%; right: 5%; bottom: 5%;
             background: rgba(0,0,0,0.95); border: 3px solid #ffcc00; border-radius: 10px;
@@ -137,10 +133,9 @@
         <button class="btn-mode" onclick="toggleFullScreen()" style="background: rgba(230, 126, 34, 0.5); border-color: #e67e22;">🔲 BẬT TOÀN MÀN HÌNH</button>
         <button class="btn-mode" onclick="startGame('MOBILE')">📱 CHƠI TRÊN ĐIỆN THOẠI</button>
         <button class="btn-mode" onclick="startGame('PC')">💻 CHƠI TRÊN PC</button>
-        <p style="color: #ccc; font-size: 14px;">(Khuyên dùng: Bật Toàn Màn Hình trước khi chơi)</p>
     </div>
 
-    <div id="loading-screen">ĐANG TẢI DỮ LIỆU...</div>
+    <div id="loading-screen">ĐANG TẢI DỮ LIỆU... <br><span id="loading-status" style="font-size:14px; color:#aaa;">Khởi tạo...</span></div>
 
     <div id="game-ui">
         <div class="top-bars">
@@ -190,7 +185,6 @@
     </div>
 
     <script>
-        // HỆ THỐNG CUSTOM ALERT
         let alertCallback = null;
         function showAlert(msg, callback) {
             document.getElementById('alert-msg').innerText = msg;
@@ -217,25 +211,18 @@
         let scene, camera, renderer, player, enemy;
         let pMixer, eMixer, clock = new THREE.Clock();
         
-        // CÁC BIẾN HOẠT ẢNH
         let pIdle, pRun, pAtk, pUlt, pDeath;
         let eIdle, eRun, eAtk, eUlt, eDeath;
         let pCurrAnim = null, eCurrAnim = null; 
 
-        // TRẠNG THÁI
         let keys = { left: false, right: false };
         let isJumping = false, velocityY = 0;
         let isEnemyJumping = false, enemyVelocityY = 0;
         let isAttacking = false, isEnemyAttacking = false;
         
-        let isDead = false; 
-        let isEnemyDead = false;
-        let isMenuOpen = false; 
+        let isDead = false, isEnemyDead = false, isMenuOpen = false; 
         
-        // Kỹ năng lướt (Đã x2.5 khoảng cách)
-        let isDashing = false;
-        let dashFrames = 0;
-        let dashDir = 1;
+        let isDashing = false, dashFrames = 0, dashDir = 1;
 
         let pStats = { hp: 100, maxHp: 100, armor: 30, mana: 0, atk: 25, gold: 0, stage: 1 };
         let eStats = { hp: 100, maxHp: 100, armor: 10, mana: 0, atk: 15, speed: 0.04, aggro: 0.02 };
@@ -278,12 +265,9 @@
                 };
                 btn.ontouchend = (e) => { e.preventDefault(); btn.style.transform="scale(1)"; if(key) keys[key]=false; };
             };
-            bind('btn-left', 'left'); 
-            bind('btn-right', 'right');
-            bind('btn-jump', null, doJump); 
-            bind('btn-attack', null, doAtk); 
-            bind('btn-dash', null, doDash); 
-            bind('btn-ult', null, doUlt);
+            bind('btn-left', 'left'); bind('btn-right', 'right');
+            bind('btn-jump', null, doJump); bind('btn-attack', null, doAtk); 
+            bind('btn-dash', null, doDash); bind('btn-ult', null, doUlt);
         }
 
         function init3D() {
@@ -304,63 +288,76 @@
 
             const loader = new THREE.GLTFLoader();
             
-            // TẢI YASUO (TỪ THƯ MỤC PLAYER)
-            loader.load('player/nhanvat.glb', (gltf) => {
+            // TẢI PLAYER
+            document.getElementById('loading-status').innerText = "Đang tải Yasuo...";
+            loader.load('./player/nhanvat.glb', (gltf) => {
                 player = gltf.scene; 
                 player.scale.set(0.015, 0.015, 0.015); 
                 player.rotation.y = Math.PI / 2; 
                 scene.add(player);
 
                 pMixer = new THREE.AnimationMixer(player);
-                pIdle = pMixer.clipAction(gltf.animations[12]); 
-                pRun = pMixer.clipAction(gltf.animations[26]);  
-                pAtk = pMixer.clipAction(gltf.animations[0]);   
-                pUlt = pMixer.clipAction(gltf.animations[42]);  
-                pDeath = pMixer.clipAction(gltf.animations[8]); 
+                // Bắt lỗi nếu file thiếu hoạt ảnh
+                try {
+                    pIdle = pMixer.clipAction(gltf.animations[12]); 
+                    pRun = pMixer.clipAction(gltf.animations[26]);  
+                    pAtk = pMixer.clipAction(gltf.animations[0]);   
+                    pUlt = pMixer.clipAction(gltf.animations[42]);  
+                    pDeath = pMixer.clipAction(gltf.animations[8]); 
 
-                pAtk.setLoop(THREE.LoopOnce); pAtk.clampWhenFinished = true;
-                pUlt.setLoop(THREE.LoopOnce); pUlt.clampWhenFinished = true;
-                pDeath.setLoop(THREE.LoopOnce); pDeath.clampWhenFinished = true;
-                
-                playAnim(pMixer, pIdle, 'player');
+                    pAtk.setLoop(THREE.LoopOnce); pAtk.clampWhenFinished = true;
+                    pUlt.setLoop(THREE.LoopOnce); pUlt.clampWhenFinished = true;
+                    pDeath.setLoop(THREE.LoopOnce); pDeath.clampWhenFinished = true;
+                    
+                    playAnim(pMixer, pIdle, 'player');
+                } catch(err) {
+                    showAlert("Lỗi thiết lập Animation Yasuo: " + err, null);
+                }
 
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('game-ui').style.display = 'block';
-                updateUI();
-                loop();
-            });
+                // TẢI BOSS SAU KHI TẢI PLAYER XONG
+                document.getElementById('loading-status').innerText = "Đang tải Quái...";
+                loader.load('./boss/quaivat.glb', (gltf2) => {
+                    enemy = gltf2.scene; 
+                    enemy.scale.set(0.015, 0.015, 0.015); 
+                    enemy.position.set(7, 0, 0); 
+                    enemy.rotation.y = -Math.PI / 2; 
+                    scene.add(enemy);
 
-            // TẢI BOT (TỪ THƯ MỤC BOSS)
-            loader.load('boss/quaivat.glb', (gltf) => {
-                enemy = gltf.scene; 
-                enemy.scale.set(0.015, 0.015, 0.015); // CẦN CHỈNH LẠI NẾU BOT QUÁ TO/NHỎ
-                enemy.position.set(7, 0, 0); 
-                enemy.rotation.y = -Math.PI / 2; 
-                scene.add(enemy);
+                    eMixer = new THREE.AnimationMixer(enemy);
+                    
+                    try {
+                        eIdle = eMixer.clipAction(gltf2.animations[12]); 
+                        eRun = eMixer.clipAction(gltf2.animations[26]);  
+                        eAtk = eMixer.clipAction(gltf2.animations[0]);   
+                        eUlt = eMixer.clipAction(gltf2.animations[42]);  
+                        eDeath = eMixer.clipAction(gltf2.animations[8]); 
 
-                eMixer = new THREE.AnimationMixer(enemy);
-                
-                // === SẾP SỬA LẠI CÁC SỐ SAU CHO KHỚP VỚI BẢNG LOG CỦA BOT NHÉ ===
-                eIdle = eMixer.clipAction(gltf.animations[12]); // Số của hành động đứng thở
-                eRun = eMixer.clipAction(gltf.animations[26]);  // Số của hành động chạy
-                eAtk = eMixer.clipAction(gltf.animations[0]);   // Số của hành động chém
-                eUlt = eMixer.clipAction(gltf.animations[42]);  // Số của hành động xài skill
-                eDeath = eMixer.clipAction(gltf.animations[8]); // Số của hành động chết ngã gục
-                // ================================================================
+                        eAtk.setLoop(THREE.LoopOnce); eAtk.clampWhenFinished = true;
+                        eUlt.setLoop(THREE.LoopOnce); eUlt.clampWhenFinished = true;
+                        eDeath.setLoop(THREE.LoopOnce); eDeath.clampWhenFinished = true;
+                        playAnim(eMixer, eIdle, 'enemy');
+                    } catch(err) {
+                        showAlert("Con Boss không có đủ Animation theo đúng số thứ tự!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
+                    }
 
-                eAtk.setLoop(THREE.LoopOnce); eAtk.clampWhenFinished = true;
-                eUlt.setLoop(THREE.LoopOnce); eUlt.clampWhenFinished = true;
-                eDeath.setLoop(THREE.LoopOnce); eDeath.clampWhenFinished = true;
-                
-                playAnim(eMixer, eIdle, 'enemy');
+                    // HIỆN LOG
+                    let logHTML = "";
+                    gltf2.animations.forEach((a,i) => { logHTML += `[${i}] ---> ${a.name}<br>`; });
+                    document.getElementById('log-content').innerHTML = logHTML;
+                    document.getElementById('log-overlay').style.display = 'flex';
 
-                // IN LOG RA MÀN HÌNH THAY VÌ TẢI XUỐNG
-                let logHTML = "";
-                gltf.animations.forEach((a,i) => {
-                    logHTML += `[${i}] ---> ${a.name}<br>`;
+                    // XÓA MÀN HÌNH CHỜ
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('game-ui').style.display = 'block';
+                    updateUI();
+                    loop();
+
+                }, undefined, (err) => {
+                    showAlert("Lỗi tải Boss (quaivat.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
                 });
-                document.getElementById('log-content').innerHTML = logHTML;
-                document.getElementById('log-overlay').style.display = 'flex';
+
+            }, undefined, (err) => {
+                showAlert("Lỗi tải Player (nhanvat.glb): Cấu trúc file bị hỏng hoặc nhập sai tên!\n" + err, null);
             });
             
             window.addEventListener('resize', () => {
@@ -371,50 +368,41 @@
         }
 
         function playAnim(mixerRef, newAction, target) {
-            if(target === 'player') {
-                if(pCurrAnim === newAction) return;
-                if(pCurrAnim) pCurrAnim.fadeOut(0.2);
-                newAction.reset().fadeIn(0.2).play();
-                pCurrAnim = newAction;
-            } else {
-                if(eCurrAnim === newAction) return;
-                if(eCurrAnim) eCurrAnim.fadeOut(0.2);
-                newAction.reset().fadeIn(0.2).play();
-                eCurrAnim = newAction;
-            }
+            try {
+                if(target === 'player') {
+                    if(pCurrAnim === newAction || !newAction) return;
+                    if(pCurrAnim) pCurrAnim.fadeOut(0.2);
+                    newAction.reset().fadeIn(0.2).play();
+                    pCurrAnim = newAction;
+                } else {
+                    if(eCurrAnim === newAction || !newAction) return;
+                    if(eCurrAnim) eCurrAnim.fadeOut(0.2);
+                    newAction.reset().fadeIn(0.2).play();
+                    eCurrAnim = newAction;
+                }
+            } catch(e){}
         }
 
-        function doJump() {
-            if(!isJumping && !isAttacking && !isDead && !isMenuOpen) { isJumping = true; velocityY = 0.35; }
-        }
-
+        function doJump() { if(!isJumping && !isAttacking && !isDead && !isMenuOpen) { isJumping = true; velocityY = 0.35; } }
         function doDash() {
             if(isDashing || isDead || isMenuOpen) return;
-            isDashing = true;
-            dashFrames = 10;
-            dashDir = (player.rotation.y > 0) ? 1 : -1;
+            isDashing = true; dashFrames = 10; dashDir = (player.rotation.y > 0) ? 1 : -1;
             playAnim(pMixer, pRun, 'player'); 
         }
 
-        function calcDamage(rawAtk, targetArmor) {
-            return rawAtk * (100 / (100 + targetArmor));
-        }
+        function calcDamage(rawAtk, targetArmor) { return rawAtk * (100 / (100 + targetArmor)); }
 
         function triggerEnemyDeath() {
             if(isEnemyDead) return;
             isEnemyDead = true;
-            
             playAnim(eMixer, eDeath, 'enemy');
-            
             setTimeout(() => {
                 scene.remove(enemy);
                 let goldDrop = Math.floor(50 * Math.pow(1.5, pStats.stage - 1));
                 pStats.gold += goldDrop;
-                
                 document.getElementById('gold-text').innerText = pStats.gold;
                 document.getElementById('stage-cleared').innerText = "ẢI " + pStats.stage + " HOÀN THÀNH!";
                 document.getElementById('upgrade-menu').style.display = 'block';
-                
                 isMenuOpen = true; 
             }, 1500);
         }
@@ -423,9 +411,7 @@
             updateUI();
             if(pStats.hp <= 0 && !isDead) {
                 isDead = true;
-                
                 playAnim(pMixer, pDeath, 'player');
-                
                 setTimeout(() => {
                     showAlert("BẠN ĐÃ TỬ TRẬN!\nHãy mua thêm chỉ số để phục thù!", () => {
                         document.getElementById('upgrade-menu').style.display = 'block';
@@ -440,21 +426,15 @@
             if(isAttacking || isDead || isDashing || isMenuOpen) return;
             isAttacking = true;
             playAnim(pMixer, pAtk, 'player');
-            
             setTimeout(() => {
                 if(enemy && !isEnemyDead && Math.abs(player.position.x - enemy.position.x) < 3.5) {
-                    let dmg = calcDamage(pStats.atk, eStats.armor);
-                    eStats.hp -= dmg;
+                    eStats.hp -= calcDamage(pStats.atk, eStats.armor);
                     pStats.mana = Math.min(100, pStats.mana + 20);
-                    
-                    let dir = player.position.x < enemy.position.x ? 1.5 : -1.5;
-                    enemy.position.x += dir;
-
+                    enemy.position.x += (player.position.x < enemy.position.x ? 1.5 : -1.5);
                     if(eStats.hp <= 0) triggerEnemyDeath();
                 }
                 updateUI();
             }, 300); 
-
             setTimeout(() => { isAttacking = false; }, 600);
         }
 
@@ -462,21 +442,15 @@
             if(pStats.mana < 100 || isAttacking || isDead || isMenuOpen) return;
             isAttacking = true;
             playAnim(pMixer, pUlt, 'player');
-            
             setTimeout(() => {
                 if(enemy && !isEnemyDead && Math.abs(player.position.x - enemy.position.x) < 8) { 
-                    let dmg = calcDamage(pStats.atk * 4, eStats.armor);
-                    eStats.hp -= dmg; 
+                    eStats.hp -= calcDamage(pStats.atk * 4, eStats.armor);
                     pStats.mana = 0;
-                    
-                    let dir = player.position.x < enemy.position.x ? 3 : -3;
-                    enemy.position.x += dir;
-
+                    enemy.position.x += (player.position.x < enemy.position.x ? 3 : -3);
                     if(eStats.hp <= 0) triggerEnemyDeath();
                 }
                 updateUI();
             }, 500);
-
             setTimeout(() => { isAttacking = false; }, 1200);
         }
 
@@ -484,122 +458,74 @@
             document.getElementById('hp-text').innerText = Math.max(0, Math.floor(pStats.hp));
             document.getElementById('atk-text').innerText = pStats.atk;
             document.getElementById('arm-text').innerText = pStats.armor;
-            
             document.getElementById('e-hp-text').innerText = Math.max(0, Math.floor(eStats.hp));
             document.getElementById('e-atk-text').innerText = eStats.atk;
             document.getElementById('e-arm-text').innerText = eStats.armor;
-            
             document.getElementById('stage-text').innerText = pStats.stage;
-            
             document.getElementById('hp-bar').style.width = (pStats.hp/pStats.maxHp*100)+'%';
             document.getElementById('mana-bar').style.width = pStats.mana+'%';
-            
             document.getElementById('enemy-hp-bar').style.width = Math.max(0, (eStats.hp/eStats.maxHp*100))+'%';
             document.getElementById('enemy-mana-bar').style.width = eStats.mana+'%';
-            
             document.getElementById('btn-ult').style.display = (pStats.mana >= 100) ? 'flex' : 'none';
-
             document.getElementById('c-atk').innerText = costs.atk;
             document.getElementById('c-hp').innerText = costs.hp;
             document.getElementById('c-arm').innerText = costs.arm;
         }
 
         function buy(type) {
-            if(pStats.gold < costs[type]) {
-                showAlert("Cày thêm tiền đi sếp, không đủ vàng rồi!", null);
-                return;
-            }
-            pStats.gold -= costs[type];
-            document.getElementById('gold-text').innerText = pStats.gold;
-            
+            if(pStats.gold < costs[type]) { showAlert("Cày thêm tiền đi sếp, không đủ vàng rồi!", null); return; }
+            pStats.gold -= costs[type]; document.getElementById('gold-text').innerText = pStats.gold;
             if(type === 'atk') pStats.atk += 15;
             if(type === 'hp') { pStats.maxHp += 50; pStats.hp = pStats.maxHp; }
             if(type === 'arm') pStats.armor += 5; 
-            
             costs[type] = Math.floor(costs[type] * 1.5);
             updateUI();
         }
 
         function buildBotStats(level) {
-            eStats.maxHp = Math.floor(100 * Math.pow(1.3, level - 1));
-            eStats.hp = eStats.maxHp; 
-            eStats.atk = Math.floor(15 * Math.pow(1.15, level - 1));
-            eStats.armor = Math.floor(10 + (level * 5));
-            eStats.mana = 0;
-            eStats.speed = Math.min(0.2, 0.04 + (level * 0.005));
-            eStats.aggro = Math.min(0.1, 0.02 + (level * 0.002));
+            eStats.maxHp = Math.floor(100 * Math.pow(1.3, level - 1)); eStats.hp = eStats.maxHp; 
+            eStats.atk = Math.floor(15 * Math.pow(1.15, level - 1)); eStats.armor = Math.floor(10 + (level * 5)); eStats.mana = 0;
+            eStats.speed = Math.min(0.2, 0.04 + (level * 0.005)); eStats.aggro = Math.min(0.1, 0.02 + (level * 0.002));
         }
 
         function jumpStage() {
             let val = parseInt(document.getElementById('jump-val').value);
-            if(isNaN(val) || val <= pStats.stage) {
-                showAlert("Vui lòng nhập số ải lớn hơn ải hiện tại!", null);
-                return;
-            }
-            pStats.stage = val;
-            buildBotStats(val);
+            if(isNaN(val) || val <= pStats.stage) { showAlert("Vui lòng nhập số ải lớn hơn ải hiện tại!", null); return; }
+            pStats.stage = val; buildBotStats(val);
             showAlert("Đã sẵn sàng nhảy tới ải " + val + " khi sếp bấm Tiếp Tục!", null);
         }
 
         function resumeGame() {
             document.getElementById('upgrade-menu').style.display = 'none';
-            pStats.hp = pStats.maxHp; 
-            isMenuOpen = false; 
-            
-            if(isDead) {
-                isDead = false;
-                playAnim(pMixer, pIdle, 'player'); 
-            } else {
-                pStats.stage++; 
-            }
-            
-            buildBotStats(pStats.stage);
-            isEnemyDead = false;
-            
-            if(!scene.children.includes(enemy)) {
-                scene.add(enemy); 
-            }
-            enemy.position.set(player.position.x + 8, 0, 0); 
-            isEnemyAttacking = false;
+            pStats.hp = pStats.maxHp; isMenuOpen = false; 
+            if(isDead) { isDead = false; playAnim(pMixer, pIdle, 'player'); } else { pStats.stage++; }
+            buildBotStats(pStats.stage); isEnemyDead = false;
+            if(!scene.children.includes(enemy)) { scene.add(enemy); }
+            enemy.position.set(player.position.x + 8, 0, 0); isEnemyAttacking = false;
             playAnim(eMixer, eIdle, 'enemy'); 
-            
             updateUI();
         }
 
         function loop() {
             requestAnimationFrame(loop);
-            
             let delta = clock.getDelta();
-            if(pMixer) pMixer.update(delta);
-            if(eMixer) eMixer.update(delta);
-
-            if(isMenuOpen) {
-                renderer.render(scene, camera);
-                return; 
-            }
+            if(pMixer) pMixer.update(delta); if(eMixer) eMixer.update(delta);
+            if(isMenuOpen) { renderer.render(scene, camera); return; }
 
             if(player && !isDead) {
                 let isMoving = false;
-                
                 if(isDashing) {
-                    player.position.x += dashDir * 0.75;
-                    dashFrames--;
-                    if(dashFrames <= 0) isDashing = false;
-                    isMoving = true;
-                }
-                else if(!isAttacking) {
+                    player.position.x += dashDir * 0.75; dashFrames--;
+                    if(dashFrames <= 0) isDashing = false; isMoving = true;
+                } else if(!isAttacking) {
                     if(keys.left) { player.position.x -= 0.12; player.rotation.y = -Math.PI/2; isMoving = true; }
                     if(keys.right) { player.position.x += 0.12; player.rotation.y = Math.PI/2; isMoving = true; }
                 }
 
-                if(isJumping) {
-                    player.position.y += velocityY; velocityY -= 0.02; 
-                    if(player.position.y <= 0) { player.position.y = 0; isJumping = false; velocityY = 0; }
-                }
+                if(isJumping) { player.position.y += velocityY; velocityY -= 0.02; if(player.position.y <= 0) { player.position.y = 0; isJumping = false; velocityY = 0; } }
 
                 if(!isAttacking && !isJumping && !isDashing) {
-                    if(isMoving) playAnim(pMixer, pRun, 'player');
-                    else playAnim(pMixer, pIdle, 'player');
+                    if(isMoving) playAnim(pMixer, pRun, 'player'); else playAnim(pMixer, pIdle, 'player');
                 }
 
                 camera.position.x = player.position.x;
@@ -609,52 +535,33 @@
                     let dir = player.position.x > enemy.position.x ? 1 : -1;
                     let isEMoving = false;
 
-                    if(isEnemyJumping) {
-                        enemy.position.y += enemyVelocityY; enemyVelocityY -= 0.02;
-                        if(enemy.position.y <= 0) { enemy.position.y = 0; isEnemyJumping = false; enemyVelocityY = 0; }
-                    }
+                    if(isEnemyJumping) { enemy.position.y += enemyVelocityY; enemyVelocityY -= 0.02; if(enemy.position.y <= 0) { enemy.position.y = 0; isEnemyJumping = false; enemyVelocityY = 0; } }
 
                     if(!isEnemyAttacking) {
                         if(eStats.mana >= 100) {
-                            isEnemyAttacking = true;
-                            playAnim(eMixer, eUlt, 'enemy');
+                            isEnemyAttacking = true; playAnim(eMixer, eUlt, 'enemy');
                             setTimeout(() => {
                                 if(!isDead && Math.abs(player.position.x - enemy.position.x) < 8) {
-                                    let dmg = calcDamage(eStats.atk * 4, pStats.armor);
-                                    pStats.hp -= dmg;
-                                    let knock = player.position.x < enemy.position.x ? -3 : 3;
-                                    player.position.x += knock;
+                                    pStats.hp -= calcDamage(eStats.atk * 4, pStats.armor);
+                                    player.position.x += (player.position.x < enemy.position.x ? -3 : 3);
                                     checkPlayerDeath();
                                 }
                             }, 500);
                             setTimeout(() => { isEnemyAttacking = false; eStats.mana = 0; updateUI(); }, 1200);
                         }
-                        else if(dist > 2.5) {
-                            enemy.position.x += dir * eStats.speed; 
-                            enemy.rotation.y = dir === 1 ? Math.PI/2 : -Math.PI/2;
-                            isEMoving = true;
-                        }
-                        else if(dist <= 3.5 && Math.random() < 0.015 && !isEnemyJumping) {
-                            isEnemyJumping = true; enemyVelocityY = 0.35;
-                        }
+                        else if(dist > 2.5) { enemy.position.x += dir * eStats.speed; enemy.rotation.y = dir === 1 ? Math.PI/2 : -Math.PI/2; isEMoving = true; }
+                        else if(dist <= 3.5 && Math.random() < 0.015 && !isEnemyJumping) { isEnemyJumping = true; enemyVelocityY = 0.35; }
                         else if(dist <= 2.5 && Math.random() < eStats.aggro) {
-                            isEnemyAttacking = true;
-                            playAnim(eMixer, eAtk, 'enemy');
+                            isEnemyAttacking = true; playAnim(eMixer, eAtk, 'enemy');
                             setTimeout(() => {
                                 if(!isDead && Math.abs(player.position.x - enemy.position.x) <= 3) {
-                                    let dmg = calcDamage(eStats.atk, pStats.armor);
-                                    pStats.hp -= dmg;
-                                    eStats.mana = Math.min(100, eStats.mana + 25);
+                                    pStats.hp -= calcDamage(eStats.atk, pStats.armor); eStats.mana = Math.min(100, eStats.mana + 25);
                                     checkPlayerDeath();
                                 }
                             }, 300);
                             setTimeout(() => { isEnemyAttacking = false; }, 600);
                         }
-
-                        if(!isEnemyAttacking && !isEnemyJumping) {
-                            if(isEMoving) playAnim(eMixer, eRun, 'enemy');
-                            else playAnim(eMixer, eIdle, 'enemy');
-                        }
+                        if(!isEnemyAttacking && !isEnemyJumping) { if(isEMoving) playAnim(eMixer, eRun, 'enemy'); else playAnim(eMixer, eIdle, 'enemy'); }
                     }
                 }
             }
