@@ -96,7 +96,7 @@
         .alert-box {
             background: #222; border: 2px solid #fff; padding: 30px; border-radius: 10px;
             text-align: center; color: white; min-width: 300px;
-            word-wrap: break-word; /* Để lỗi dài không bị tràn */
+            word-wrap: break-word; 
         }
         .alert-box button {
             margin-top: 20px; padding: 10px 30px; background: #ffcc00; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;
@@ -281,23 +281,32 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            // Tăng cường ánh sáng để thấy rõ chi tiết nhân vật
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(5, 10, 5); 
             scene.add(dirLight);
 
             const loader = new THREE.GLTFLoader();
             
-            // TẢI PLAYER
+            // ================= TẢI PLAYER =================
             document.getElementById('loading-status').innerText = "Đang tải Yasuo...";
             loader.load('./player/nhanvat.glb', (gltf) => {
                 player = gltf.scene; 
-                player.scale.set(0.015, 0.015, 0.015); 
-                player.rotation.y = Math.PI / 2; 
                 scene.add(player);
 
+                // THUẬT TOÁN AUTO SCALE: Ép cân cho bằng 4.5 mét bất chấp file to hay nhỏ
+                const pBox = new THREE.Box3().setFromObject(player);
+                const pSize = pBox.getSize(new THREE.Vector3());
+                const pScale = 4.5 / pSize.y; 
+                player.scale.set(pScale, pScale, pScale);
+                
+                // Thuật toán dời nhân vật sao cho bàn chân chạm chính xác mặt đất
+                const pBoxAfter = new THREE.Box3().setFromObject(player);
+                player.position.y = -pBoxAfter.min.y; 
+                player.rotation.y = Math.PI / 2; 
+
                 pMixer = new THREE.AnimationMixer(player);
-                // Bắt lỗi nếu file thiếu hoạt ảnh
                 try {
                     pIdle = pMixer.clipAction(gltf.animations[12]); 
                     pRun = pMixer.clipAction(gltf.animations[26]);  
@@ -308,23 +317,31 @@
                     pAtk.setLoop(THREE.LoopOnce); pAtk.clampWhenFinished = true;
                     pUlt.setLoop(THREE.LoopOnce); pUlt.clampWhenFinished = true;
                     pDeath.setLoop(THREE.LoopOnce); pDeath.clampWhenFinished = true;
-                    
                     playAnim(pMixer, pIdle, 'player');
                 } catch(err) {
-                    showAlert("Lỗi thiết lập Animation Yasuo: " + err, null);
+                    showAlert("Lỗi thiết lập Animation Yasuo: Thiếu hoạt ảnh!", null);
                 }
 
-                // TẢI BOSS SAU KHI TẢI PLAYER XONG
-                document.getElementById('loading-status').innerText = "Đang tải Quái...";
+                // ================= TẢI BOSS MỚI =================
+                document.getElementById('loading-status').innerText = "Đang tải Quái Nhân...";
                 loader.load('./boss/quaivat.glb', (gltf2) => {
                     enemy = gltf2.scene; 
-                    enemy.scale.set(0.015, 0.015, 0.015); 
-                    enemy.position.set(7, 0, 0); 
-                    enemy.rotation.y = -Math.PI / 2; 
                     scene.add(enemy);
 
-                    eMixer = new THREE.AnimationMixer(enemy);
+                    // THUẬT TOÁN AUTO SCALE CHO BOSS
+                    const eBox = new THREE.Box3().setFromObject(enemy);
+                    const eSize = eBox.getSize(new THREE.Vector3());
+                    const eScale = 4.8 / eSize.y; // Boss cao 4.8 mét
+                    enemy.scale.set(eScale, eScale, eScale);
                     
+                    // Ép chân chạm đất
+                    const eBoxAfter = new THREE.Box3().setFromObject(enemy);
+                    enemy.position.y = -eBoxAfter.min.y;
+                    
+                    enemy.position.set(7, enemy.position.y, 0); 
+                    enemy.rotation.y = -Math.PI / 2; 
+
+                    eMixer = new THREE.AnimationMixer(enemy);
                     try {
                         eIdle = eMixer.clipAction(gltf2.animations[12]); 
                         eRun = eMixer.clipAction(gltf2.animations[26]);  
@@ -337,7 +354,7 @@
                         eDeath.setLoop(THREE.LoopOnce); eDeath.clampWhenFinished = true;
                         playAnim(eMixer, eIdle, 'enemy');
                     } catch(err) {
-                        showAlert("Con Boss không có đủ Animation theo đúng số thứ tự!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
+                        showAlert("Con Boss mới không có đủ Animation theo số cũ!\nSếp mở bảng Log ra để tìm số mới nhé.", null);
                     }
 
                     // HIỆN LOG
@@ -500,8 +517,12 @@
             pStats.hp = pStats.maxHp; isMenuOpen = false; 
             if(isDead) { isDead = false; playAnim(pMixer, pIdle, 'player'); } else { pStats.stage++; }
             buildBotStats(pStats.stage); isEnemyDead = false;
+            
             if(!scene.children.includes(enemy)) { scene.add(enemy); }
-            enemy.position.set(player.position.x + 8, 0, 0); isEnemyAttacking = false;
+            // Lấy lại tọa độ Y chuẩn đã căn chỉnh từ lúc đầu
+            const eBoxAfter = new THREE.Box3().setFromObject(enemy);
+            enemy.position.set(player.position.x + 8, -eBoxAfter.min.y, 0); 
+            isEnemyAttacking = false;
             playAnim(eMixer, eIdle, 'enemy'); 
             updateUI();
         }
@@ -522,7 +543,14 @@
                     if(keys.right) { player.position.x += 0.12; player.rotation.y = Math.PI/2; isMoving = true; }
                 }
 
-                if(isJumping) { player.position.y += velocityY; velocityY -= 0.02; if(player.position.y <= 0) { player.position.y = 0; isJumping = false; velocityY = 0; } }
+                // Bảo toàn gốc tọa độ Y khi nhảy
+                const pBoxY = new THREE.Box3().setFromObject(player);
+                const groundY = -pBoxY.min.y + player.position.y; // Y mặt đất
+
+                if(isJumping) { 
+                    player.position.y += velocityY; velocityY -= 0.02; 
+                    if(player.position.y <= groundY) { player.position.y = groundY; isJumping = false; velocityY = 0; } 
+                }
 
                 if(!isAttacking && !isJumping && !isDashing) {
                     if(isMoving) playAnim(pMixer, pRun, 'player'); else playAnim(pMixer, pIdle, 'player');
@@ -535,7 +563,13 @@
                     let dir = player.position.x > enemy.position.x ? 1 : -1;
                     let isEMoving = false;
 
-                    if(isEnemyJumping) { enemy.position.y += enemyVelocityY; enemyVelocityY -= 0.02; if(enemy.position.y <= 0) { enemy.position.y = 0; isEnemyJumping = false; enemyVelocityY = 0; } }
+                    const eBoxY = new THREE.Box3().setFromObject(enemy);
+                    const eGroundY = -eBoxY.min.y + enemy.position.y;
+
+                    if(isEnemyJumping) { 
+                        enemy.position.y += enemyVelocityY; enemyVelocityY -= 0.02; 
+                        if(enemy.position.y <= eGroundY) { enemy.position.y = eGroundY; isEnemyJumping = false; enemyVelocityY = 0; } 
+                    }
 
                     if(!isEnemyAttacking) {
                         if(eStats.mana >= 100) {
