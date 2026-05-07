@@ -12,11 +12,11 @@
             background-color: #2c3e50;
             font-family: Arial, sans-serif;
             color: #fff;
-            overflow: hidden; /* Chặn cuộn trang */
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
-            -webkit-touch-callout: none; /* Chặn menu chạm giữ trên iOS */
+            overflow: hidden; 
+            -webkit-user-select: none; 
+            -ms-user-select: none; 
+            user-select: none; 
+            -webkit-touch-callout: none; 
         }
         
         #game-container {
@@ -30,7 +30,7 @@
             width: 250px;  
             height: 150px;
             position: absolute;
-            bottom: 10%; /* Căn theo % để trên điện thoại không bị lọt thỏm */
+            bottom: 10%; 
             left: 50px;
             background-image: url('stand_1.png');
             background-size: contain;
@@ -39,7 +39,7 @@
             transition: left 0.1s linear, bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        /* --- MÀN HÌNH KHỞI ĐỘNG (BẮT BUỘC ĐỂ KÍCH HOẠT FULLSCREEN) --- */
+        /* MÀN HÌNH KHỞI ĐỘNG */
         #start-screen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -74,22 +74,27 @@
             z-index: 10;
         }
 
-        .d-pad, .action-pad {
-            display: grid;
-            gap: 10px;
-        }
-
+        /* Cụm di chuyển bên trái */
         .d-pad {
+            display: grid;
             grid-template-columns: 60px 60px 60px;
             grid-template-rows: 60px 60px;
             grid-template-areas: 
                 ". up ."
-                "left down right";
+                "left . right";
+            gap: 10px;
         }
 
+        /* Cụm tấn công bên phải */
         .action-pad {
-            display: flex;
-            align-items: flex-end;
+            display: grid;
+            grid-template-columns: 65px 80px;
+            grid-template-rows: 65px 65px;
+            grid-template-areas: 
+                "punch kame"
+                "gong kame";
+            gap: 10px;
+            align-items: center;
         }
 
         .btn {
@@ -99,7 +104,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #fff;
             user-select: none;
@@ -108,23 +113,22 @@
         .btn:active { background: rgba(255, 255, 255, 0.6); }
 
         #btn-up { grid-area: up; }
-        #btn-down { grid-area: down; font-size: 14px;}
         #btn-left { grid-area: left; }
         #btn-right { grid-area: right; }
         
+        #btn-punch { grid-area: punch; font-size: 14px; background: rgba(52, 152, 219, 0.6); }
+        #btn-gong { grid-area: gong; font-size: 14px; background: rgba(241, 196, 15, 0.6); }
+        
         #btn-kame {
-            width: 80px;
-            height: 80px;
-            background: rgba(231, 76, 60, 0.5);
+            grid-area: kame;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: rgba(231, 76, 60, 0.6);
             border-color: rgba(231, 76, 60, 0.8);
-            font-size: 16px;
+            font-size: 18px;
         }
-        #btn-kame:active { background: rgba(231, 76, 60, 0.8); }
-
-        /* Ẩn bảng hướng dẫn PC nếu màn hình nhỏ */
-        @media (max-width: 768px) {
-            .pc-controls { display: none; }
-        }
+        #btn-kame:active { background: rgba(231, 76, 60, 0.9); }
     </style>
 </head>
 <body>
@@ -140,36 +144,33 @@
             <div class="d-pad">
                 <div class="btn" id="btn-up">▲</div>
                 <div class="btn" id="btn-left">◀</div>
-                <div class="btn" id="btn-down">Gồng</div>
                 <div class="btn" id="btn-right">▶</div>
             </div>
             <div class="action-pad">
+                <div class="btn" id="btn-punch">Đấm</div>
+                <div class="btn" id="btn-gong">Gồng</div>
                 <div class="btn" id="btn-kame">Kame</div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. CHẶN COPY & CHUỘT PHẢI ---
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('dragstart', event => event.preventDefault());
 
-        // --- 2. FULLSCREEN & XOAY NGANG ---
         const startBtn = document.getElementById('start-btn');
         const startScreen = document.getElementById('start-screen');
 
         startBtn.addEventListener('click', async () => {
-            startScreen.style.display = 'none'; // Ẩn màn hình chờ
+            startScreen.style.display = 'none'; 
             
-            // Yêu cầu Fullscreen
             const elem = document.documentElement;
             if (elem.requestFullscreen) {
                 await elem.requestFullscreen().catch(err => console.log(err));
-            } else if (elem.webkitRequestFullscreen) { /* Safari */
+            } else if (elem.webkitRequestFullscreen) { 
                 await elem.webkitRequestFullscreen().catch(err => console.log(err));
             }
 
-            // Yêu cầu xoay ngang (Landscape) - Chạy trên mobile
             if (screen.orientation && screen.orientation.lock) {
                 try {
                     await screen.orientation.lock('landscape');
@@ -179,21 +180,36 @@
             }
         });
 
-        // --- 3. LOGIC GAME & ANIMATION ---
         const player = document.getElementById('player');
         
+        // Đã cập nhật lại số lượng frame cho khớp với bộ ảnh của bạn
         const animations = {
             stand: { prefix: 'stand_', frames: 4, speed: 150 },
-            sit: { prefix: 'sit_', frames: 4, speed: 150 }, // Dùng làm nút Gồng
+            punch: { prefix: 'punch_', frames: 4, speed: 100 },
+            sit:   { prefix: 'sit_', frames: 3, speed: 150 }, /* Đã sửa thành 3 để hết lỗi nháy */
             skill: { prefix: 'skill_', frames: 8, speed: 100 }
         };
+
+        // --- CƠ CHẾ TẢI TRƯỚC ẢNH (CHỐNG NHẤP NHÁY) ---
+        const imageCache = [];
+        function preloadImages() {
+            for (const key in animations) {
+                const anim = animations[key];
+                for (let i = 1; i <= anim.frames; i++) {
+                    const img = new Image();
+                    img.src = `${anim.prefix}${i}.png`;
+                    imageCache.push(img);
+                }
+            }
+        }
+        preloadImages(); // Gọi hàm tải ảnh ngay khi web vừa mở
 
         let currentAction = 'stand';
         let currentFrame = 1;
         let animationInterval;
-        let playerX = 50; // Vị trí ngang mặc định
+        let playerX = 50; 
         let isJumping = false;
-        let moveInterval; // Vòng lặp di chuyển trái/phải
+        let moveInterval; 
 
         function playAnimation(action) {
             if (currentAction === action) return; 
@@ -201,26 +217,29 @@
             currentFrame = 1;
             clearInterval(animationInterval);
             
+            // Render khung hình đầu tiên ngay lập tức để không bị delay
+            player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
+            
             animationInterval = setInterval(() => {
-                player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
                 currentFrame++;
                 if (currentFrame > animations[action].frames) currentFrame = 1;
+                player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
             }, animations[action].speed);
         }
 
-        playAnimation('stand'); // Mặc định đứng thở
+        playAnimation('stand'); 
 
-        // --- HÀM DI CHUYỂN ---
+        // --- HÀM DI CHUYỂN & NHẢY ---
         function startMoving(direction) {
             clearInterval(moveInterval);
             moveInterval = setInterval(() => {
                 if (direction === 'left' && playerX > 0) {
-                    playerX -= 15; // Tốc độ lướt trái
+                    playerX -= 15; 
                 } else if (direction === 'right' && playerX < window.innerWidth - 250) {
-                    playerX += 15; // Tốc độ lướt phải
+                    playerX += 15; 
                 }
                 player.style.left = playerX + 'px';
-            }, 50); // Cập nhật vị trí mỗi 50ms
+            }, 50); 
         }
 
         function stopMoving() {
@@ -230,40 +249,34 @@
         function jump() {
             if (isJumping) return;
             isJumping = true;
-            // Nhảy lên (nâng bottom lên)
             player.style.bottom = '40%';
             
-            // Rơi xuống sau 400ms
             setTimeout(() => {
                 player.style.bottom = '10%';
-                setTimeout(() => { isJumping = false; }, 300); // Cooldown nhảy
+                setTimeout(() => { isJumping = false; }, 300); 
             }, 400);
         }
 
-        // --- 4. KẾT NỐI NÚT BẤM ĐIỆN THOẠI (Touch Events) ---
-        // Nút Trái
-        const btnLeft = document.getElementById('btn-left');
-        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
-        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
+        // --- BẮT SỰ KIỆN NÚT BẤM CẢM ỨNG ---
+        
+        // Di chuyển
+        document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
+        document.getElementById('btn-left').addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
 
-        // Nút Phải
-        const btnRight = document.getElementById('btn-right');
-        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
-        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
+        document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
+        document.getElementById('btn-right').addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
 
-        // Nút Lên (Nhảy)
-        const btnUp = document.getElementById('btn-up');
-        btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        document.getElementById('btn-up').addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
 
-        // Nút Xuống (Gồng)
-        const btnDown = document.getElementById('btn-down');
-        btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('sit'); });
-        btnDown.addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
+        // Tấn công / Hành động
+        document.getElementById('btn-punch').addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('punch'); });
+        document.getElementById('btn-punch').addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
 
-        // Nút Kamehameha
-        const btnKame = document.getElementById('btn-kame');
-        btnKame.addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('skill'); });
-        btnKame.addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
+        document.getElementById('btn-gong').addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('sit'); });
+        document.getElementById('btn-gong').addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
+
+        document.getElementById('btn-kame').addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('skill'); });
+        document.getElementById('btn-kame').addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
 
     </script>
 </body>
