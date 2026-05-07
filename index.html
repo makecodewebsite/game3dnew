@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goku Animation Web Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+        
+        #game-container {
+            width: 800px;
+            height: 400px;
+            background: linear-gradient(#87CEEB 60%, #8BC34A 40%);
+            position: relative;
+            margin-top: 50px;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #player {
+            width: 250px;  /* Kích thước khung chứa nhân vật, điều chỉnh nếu ảnh bạn cắt to hơn */
+            height: 150px;
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            background-image: url('stand_1.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom left;
+        }
+
+        .controls {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        kbd {
+            background-color: #f1c40f;
+            color: #000;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="player"></div>
+    </div>
+
+    <div class="controls">
+        <h3>🎮 Bảng Điều Khiển</h3>
+        <p><kbd>Buông tay</kbd> : Đứng thở (Animation lặp lại 4 frame)</p>
+        <p><kbd>J</kbd> : Đấm liên tục</p>
+        <p><kbd>K</kbd> : Ngồi thủ</p>
+        <p><kbd>L</kbd> : Tung Kamehameha (Chạy full 8 frame)</p>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        
+        // Cấu hình số lượng ảnh cho mỗi hành động và tốc độ nháy ảnh (ms)
+        const animations = {
+            stand: { prefix: 'stand_', frames: 4, speed: 150 },
+            punch: { prefix: 'punch_', frames: 4, speed: 100 },
+            sit: { prefix: 'sit_', frames: 4, speed: 150 },
+            skill: { prefix: 'skill_', frames: 8, speed: 100 }
+        };
+
+        let currentAction = 'stand'; // Trạng thái mặc định
+        let currentFrame = 1;
+        let animationInterval;
+
+        // Hàm chạy animation
+        function playAnimation(action) {
+            // Nếu hành động mới giống hành động đang chạy thì bỏ qua để tránh giật hình
+            if (currentAction === action) return; 
+            
+            currentAction = action;
+            currentFrame = 1; // Bắt đầu lại từ ảnh số 1 của hành động đó
+            
+            clearInterval(animationInterval); // Xóa bộ đếm thời gian cũ
+            
+            // Tạo vòng lặp mới cập nhật ảnh liên tục
+            animationInterval = setInterval(() => {
+                // Đổi link ảnh
+                player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
+                
+                // Tăng số đếm khung hình lên 1
+                currentFrame++;
+                
+                // Nếu vượt quá số khung hình tối đa, quay lại khung hình số 1 để lặp lại
+                if (currentFrame > animations[action].frames) {
+                    currentFrame = 1;
+                }
+            }, animations[action].speed);
+        }
+
+        // Bắt đầu game với hiệu ứng đứng thở
+        playAnimation('stand');
+
+        // Bắt sự kiện NHẤN phím xuống
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (key === 'j') playAnimation('punch');
+            else if (key === 'k') playAnimation('sit');
+            else if (key === 'l') playAnimation('skill');
+        });
+
+        // Bắt sự kiện NHẢ phím ra (quay về đứng thở)
+        document.addEventListener('keyup', (event) => {
+            const key = event.key.toLowerCase();
+            // Nếu vừa thả các phím tấn công ra, lập tức quay về dáng đứng
+            if (['j', 'k', 'l'].includes(key)) {
+                // Mẹo nhỏ: Delay 1 chút nếu muốn xem hết đòn trước khi thu người về (tùy chọn)
+                currentAction = ''; // Reset state
+                playAnimation('stand');
+            }
+        });
+    </script>
+</body>
+</html>
