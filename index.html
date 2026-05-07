@@ -182,12 +182,12 @@
 
         const player = document.getElementById('player');
         
-        // Đã cập nhật lại số lượng frame cho khớp với bộ ảnh của bạn
+        // CẬP NHẬT SỐ LƯỢNG FRAME THEO ĐÚNG ẢNH BẠN ĐANG CÓ
         const animations = {
-            stand: { prefix: 'stand_', frames: 4, speed: 150 },
-            punch: { prefix: 'punch_', frames: 4, speed: 100 },
-            sit:   { prefix: 'sit_', frames: 3, speed: 150 }, /* Đã sửa thành 3 để hết lỗi nháy */
-            skill: { prefix: 'skill_', frames: 8, speed: 100 }
+            stand: { prefix: 'stand_', frames: 2, speed: 200 }, /* 2 ảnh, chỉnh speed chậm lại 1 chút để đứng thở tự nhiên hơn */
+            punch: { prefix: 'punch_', frames: 4, speed: 100 }, /* 4 ảnh */
+            sit:   { prefix: 'sit_', frames: 3, speed: 150 }, /* 3 ảnh */
+            skill: { prefix: 'skill_', frames: 7, speed: 100 }  /* 7 ảnh */
         };
 
         // --- CƠ CHẾ TẢI TRƯỚC ẢNH (CHỐNG NHẤP NHÁY) ---
@@ -202,7 +202,7 @@
                 }
             }
         }
-        preloadImages(); // Gọi hàm tải ảnh ngay khi web vừa mở
+        preloadImages(); 
 
         let currentAction = 'stand';
         let currentFrame = 1;
@@ -217,7 +217,7 @@
             currentFrame = 1;
             clearInterval(animationInterval);
             
-            // Render khung hình đầu tiên ngay lập tức để không bị delay
+            // Render khung hình đầu tiên ngay lập tức
             player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
             
             animationInterval = setInterval(() => {
