@@ -2,137 +2,269 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goku Animation Web Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Goku Web Game - Mobile Version</title>
     <style>
+        /* CHẶN COPY VÀ QUÉT KHỐI */
         body {
             margin: 0;
             padding: 0;
             background-color: #2c3e50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             font-family: Arial, sans-serif;
             color: #fff;
+            overflow: hidden; /* Chặn cuộn trang */
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+            -webkit-touch-callout: none; /* Chặn menu chạm giữ trên iOS */
         }
         
         #game-container {
-            width: 800px;
-            height: 400px;
+            width: 100vw;
+            height: 100vh;
             background: linear-gradient(#87CEEB 60%, #8BC34A 40%);
             position: relative;
-            margin-top: 50px;
-            border: 4px solid #fff;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #player {
-            width: 250px;  /* Kích thước khung chứa nhân vật, điều chỉnh nếu ảnh bạn cắt to hơn */
+            width: 250px;  
             height: 150px;
             position: absolute;
-            bottom: 20px;
+            bottom: 10%; /* Căn theo % để trên điện thoại không bị lọt thỏm */
             left: 50px;
             background-image: url('stand_1.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: bottom left;
+            transition: left 0.1s linear, bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .controls {
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
+        /* --- MÀN HÌNH KHỞI ĐỘNG (BẮT BUỘC ĐỂ KÍCH HOẠT FULLSCREEN) --- */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
-        kbd {
+        #start-btn {
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
             background-color: #f1c40f;
             color: #000;
-            border-radius: 4px;
-            padding: 4px 8px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.4);
+        }
+
+        /* --- UI NÚT BẤM CHO ĐIỆN THOẠI --- */
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .d-pad, .action-pad {
+            display: grid;
+            gap: 10px;
+        }
+
+        .d-pad {
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            grid-template-areas: 
+                ". up ."
+                "left down right";
+        }
+
+        .action-pad {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
             font-weight: bold;
-            font-family: monospace;
+            color: #fff;
+            user-select: none;
+        }
+
+        .btn:active { background: rgba(255, 255, 255, 0.6); }
+
+        #btn-up { grid-area: up; }
+        #btn-down { grid-area: down; font-size: 14px;}
+        #btn-left { grid-area: left; }
+        #btn-right { grid-area: right; }
+        
+        #btn-kame {
+            width: 80px;
+            height: 80px;
+            background: rgba(231, 76, 60, 0.5);
+            border-color: rgba(231, 76, 60, 0.8);
+            font-size: 16px;
+        }
+        #btn-kame:active { background: rgba(231, 76, 60, 0.8); }
+
+        /* Ẩn bảng hướng dẫn PC nếu màn hình nhỏ */
+        @media (max-width: 768px) {
+            .pc-controls { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="player"></div>
+    <div id="start-screen">
+        <button id="start-btn">BẮT ĐẦU CHƠI</button>
     </div>
 
-    <div class="controls">
-        <h3>🎮 Bảng Điều Khiển</h3>
-        <p><kbd>Buông tay</kbd> : Đứng thở (Animation lặp lại 4 frame)</p>
-        <p><kbd>J</kbd> : Đấm liên tục</p>
-        <p><kbd>K</kbd> : Ngồi thủ</p>
-        <p><kbd>L</kbd> : Tung Kamehameha (Chạy full 8 frame)</p>
+    <div id="game-container">
+        <div id="player"></div>
+        
+        <div class="mobile-controls">
+            <div class="d-pad">
+                <div class="btn" id="btn-up">▲</div>
+                <div class="btn" id="btn-left">◀</div>
+                <div class="btn" id="btn-down">Gồng</div>
+                <div class="btn" id="btn-right">▶</div>
+            </div>
+            <div class="action-pad">
+                <div class="btn" id="btn-kame">Kame</div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // --- 1. CHẶN COPY & CHUỘT PHẢI ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('dragstart', event => event.preventDefault());
+
+        // --- 2. FULLSCREEN & XOAY NGANG ---
+        const startBtn = document.getElementById('start-btn');
+        const startScreen = document.getElementById('start-screen');
+
+        startBtn.addEventListener('click', async () => {
+            startScreen.style.display = 'none'; // Ẩn màn hình chờ
+            
+            // Yêu cầu Fullscreen
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                await elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                await elem.webkitRequestFullscreen().catch(err => console.log(err));
+            }
+
+            // Yêu cầu xoay ngang (Landscape) - Chạy trên mobile
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    await screen.orientation.lock('landscape');
+                } catch (error) {
+                    console.log("Thiết bị không hỗ trợ tự động xoay, vui lòng xoay tay.");
+                }
+            }
+        });
+
+        // --- 3. LOGIC GAME & ANIMATION ---
         const player = document.getElementById('player');
         
-        // Cấu hình số lượng ảnh cho mỗi hành động và tốc độ nháy ảnh (ms)
         const animations = {
             stand: { prefix: 'stand_', frames: 4, speed: 150 },
-            punch: { prefix: 'punch_', frames: 4, speed: 100 },
-            sit: { prefix: 'sit_', frames: 4, speed: 150 },
+            sit: { prefix: 'sit_', frames: 4, speed: 150 }, // Dùng làm nút Gồng
             skill: { prefix: 'skill_', frames: 8, speed: 100 }
         };
 
-        let currentAction = 'stand'; // Trạng thái mặc định
+        let currentAction = 'stand';
         let currentFrame = 1;
         let animationInterval;
+        let playerX = 50; // Vị trí ngang mặc định
+        let isJumping = false;
+        let moveInterval; // Vòng lặp di chuyển trái/phải
 
-        // Hàm chạy animation
         function playAnimation(action) {
-            // Nếu hành động mới giống hành động đang chạy thì bỏ qua để tránh giật hình
             if (currentAction === action) return; 
-            
             currentAction = action;
-            currentFrame = 1; // Bắt đầu lại từ ảnh số 1 của hành động đó
+            currentFrame = 1;
+            clearInterval(animationInterval);
             
-            clearInterval(animationInterval); // Xóa bộ đếm thời gian cũ
-            
-            // Tạo vòng lặp mới cập nhật ảnh liên tục
             animationInterval = setInterval(() => {
-                // Đổi link ảnh
                 player.style.backgroundImage = `url('${animations[action].prefix}${currentFrame}.png')`;
-                
-                // Tăng số đếm khung hình lên 1
                 currentFrame++;
-                
-                // Nếu vượt quá số khung hình tối đa, quay lại khung hình số 1 để lặp lại
-                if (currentFrame > animations[action].frames) {
-                    currentFrame = 1;
-                }
+                if (currentFrame > animations[action].frames) currentFrame = 1;
             }, animations[action].speed);
         }
 
-        // Bắt đầu game với hiệu ứng đứng thở
-        playAnimation('stand');
+        playAnimation('stand'); // Mặc định đứng thở
 
-        // Bắt sự kiện NHẤN phím xuống
-        document.addEventListener('keydown', (event) => {
-            const key = event.key.toLowerCase();
-            if (key === 'j') playAnimation('punch');
-            else if (key === 'k') playAnimation('sit');
-            else if (key === 'l') playAnimation('skill');
-        });
+        // --- HÀM DI CHUYỂN ---
+        function startMoving(direction) {
+            clearInterval(moveInterval);
+            moveInterval = setInterval(() => {
+                if (direction === 'left' && playerX > 0) {
+                    playerX -= 15; // Tốc độ lướt trái
+                } else if (direction === 'right' && playerX < window.innerWidth - 250) {
+                    playerX += 15; // Tốc độ lướt phải
+                }
+                player.style.left = playerX + 'px';
+            }, 50); // Cập nhật vị trí mỗi 50ms
+        }
 
-        // Bắt sự kiện NHẢ phím ra (quay về đứng thở)
-        document.addEventListener('keyup', (event) => {
-            const key = event.key.toLowerCase();
-            // Nếu vừa thả các phím tấn công ra, lập tức quay về dáng đứng
-            if (['j', 'k', 'l'].includes(key)) {
-                // Mẹo nhỏ: Delay 1 chút nếu muốn xem hết đòn trước khi thu người về (tùy chọn)
-                currentAction = ''; // Reset state
-                playAnimation('stand');
-            }
-        });
+        function stopMoving() {
+            clearInterval(moveInterval);
+        }
+
+        function jump() {
+            if (isJumping) return;
+            isJumping = true;
+            // Nhảy lên (nâng bottom lên)
+            player.style.bottom = '40%';
+            
+            // Rơi xuống sau 400ms
+            setTimeout(() => {
+                player.style.bottom = '10%';
+                setTimeout(() => { isJumping = false; }, 300); // Cooldown nhảy
+            }, 400);
+        }
+
+        // --- 4. KẾT NỐI NÚT BẤM ĐIỆN THOẠI (Touch Events) ---
+        // Nút Trái
+        const btnLeft = document.getElementById('btn-left');
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
+
+        // Nút Phải
+        const btnRight = document.getElementById('btn-right');
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); stopMoving(); });
+
+        // Nút Lên (Nhảy)
+        const btnUp = document.getElementById('btn-up');
+        btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+
+        // Nút Xuống (Gồng)
+        const btnDown = document.getElementById('btn-down');
+        btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('sit'); });
+        btnDown.addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
+
+        // Nút Kamehameha
+        const btnKame = document.getElementById('btn-kame');
+        btnKame.addEventListener('touchstart', (e) => { e.preventDefault(); playAnimation('skill'); });
+        btnKame.addEventListener('touchend', (e) => { e.preventDefault(); playAnimation('stand'); });
+
     </script>
 </body>
 </html>
